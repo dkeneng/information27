@@ -1,25 +1,22 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+import logging
 
-app = Flask(__name__)
+from info import create_app
 
-
-class Config(object):
-    """工程配置信息"""
-    DEBUG = True
-    # 数据库的配置信息
-    SQLALCHEMY_DATABASE_URI = "mysql://root:qwerdf@127.0.0.1/information"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-
-app.config.from_object(Config)
-db = SQLAlchemy(app)
+app = create_app("development")
 
 
 @app.route('/')
 def index():
-    return "index 33333"
+    # session["name"] = "cehsi"
+    # session["password"] = "qwerdfhkhkhkjsd"
+
+    # 测试打印日志
+    logging.debug("测试 debug")
+    logging.warning("测试 warning")
+    logging.error("测试 error")
+    logging.fatal("测试 fatal")
+    return "index"
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
