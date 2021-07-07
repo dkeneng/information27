@@ -33,9 +33,18 @@ $(function(){
 
 
 	// 点击输入框，提示文字上移
-	$('.form_group').on('click focusin',function(){
-		$(this).children('.input_tip').animate({'top':-5,'font-size':12},'fast').siblings('input').focus().parent().addClass('hotline');
-	})
+	// $('.form_group').on('click focusin',function(){
+	// 	$(this).children('.input_tip').animate({'top':-5,'font-size':12},'fast').siblings('input').focus().parent().addClass('hotline');
+	// })
+
+    $('.form_group').on('click',function(){
+        $(this).children('input').focus()
+    })
+
+    $('.form_group input').on('focusin',function(){
+        $(this).siblings('.input_tip').animate({'top':-5,'font-size':12},'fast')
+        $(this).parent().addClass('hotline');
+    })
 
 	// 输入框失去焦点，如果输入框为空，则提示文字下移
 	$('.form_group input').on('blur focusout',function(){
@@ -144,7 +153,33 @@ $(function(){
         }
 
         // 发起注册请求
+        // 准备参数
+        var params = {
+            "mobile": mobile,
+            "smscode": smscode,
+            "password": password
+        }
 
+        $.ajax({
+            url: "/passport/register",
+            type: "post",
+            contentType: "application/json",
+            data: JSON.stringify(params),
+            headers: {
+                "X-CSRFToken": getCookie('csrf_token')
+            },
+            success: function (resp) {
+                if (resp.errno == "0") {
+                    // 代表注册成功就代表登录成功
+                    location.reload()
+                }else {
+                    // 代表注册失败
+                    alert(resp.errmsg)
+                    $("#register-password-err").html(resp.errmsg)
+                    $("#register-password-err").show()
+                }
+            }
+        })
     })
 })
 
@@ -197,7 +232,30 @@ function sendSMSCode() {
         // 请求参数的数据类型
         contentType: "application/json",
         success: function (response) {
+            if (response.errno == "0"){
+                // 发送成功
+                var num = 60
+                var t = setInterval(function () {
+                    if (num == 1) {
+                        // 代表倒计时结束
+                        // 清除倒计时
+                        clearInterval(t)
+                        // 设置显示内容
+                        $(".get_code").html("点击获取验证码")
+                        // 添加点击事件
+                        $(".get_code").attr("onclick", "sendSMSCode();");
+                    }else {
+                        num -= 1
+                        // 设置a标签的显示内容
+                        $(".get_code").html(num + "秒")
+                    }
+                }, 1000)
 
+            }else {
+                // 发送失败
+                alert(response.errmsg)
+                $(".get_code").attr("onclick", "sendSMSCode();");
+            }
         }
     })
 }
