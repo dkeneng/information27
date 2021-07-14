@@ -99,7 +99,7 @@ def send_sms_code():
     #     # 代表发送不成功
     #     return jsonify(errno=RET.THIRDERR, errmsg="发送短信失败")
 
-    # 不适用容联云发送短信，在日志中打印
+    # 不使用容联云发送短信，在日志中打印
     current_app.logger.info("短信验证码内容是：%s" % sms_code_str)
 
     # 保存短信验证码内容到redis中
@@ -155,11 +155,13 @@ def registry():
     # 5.如果一致，初始化User模型，并且赋值属性
     user = User()
     user.mobile = mobile
-    # 暂时没有昵称，使用手机号吗代替
+    # 暂时没有昵称，使用手机号码代替
     user.nick_name = mobile
     # 记录用户最后一次登录时间
     user.last_login = datetime.now()
-    # TODO 对密码做处理
+    # 对密码做处理, 在设置password的时候，去对password进行加密，并将加密结果给user.password_hash赋值
+    user.password = password
+    # print(user.password_hash)
 
     # 6.将user模型添加数据库
     try:
@@ -176,3 +178,73 @@ def registry():
     session["nick_name"] = user.nick_name
     # 7.返回响应
     return jsonify(errno=RET.OK, errmsg="注册成功")
+
+
+@passport_blu.route("/login", methods=["POST"])
+def login():
+    """
+    用户登录逻辑
+    1、获取参数
+    2、校验参数
+    3、校验密码是否正确
+    4、保存用户的登录状态
+    5、返回响应
+    :return:
+    """
+    # 1、获取参数
+    params_dict = request.json
+    mobile = params_dict.get("mobile")
+    password = params_dict.get("password")
+
+    # 2、校验参数
+    if not all([mobile, password]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+    # 校验手机号格式是否正确
+    if not re.match('1[35678]\\d{9}', mobile):
+        return jsonify(errno=RET.PARAMERR, errmsg="手机号格式不正确")
+
+    # 3、校验密码是否正确
+    # 先查询出当前是否有指定手机号的用户
+    try:
+        user = User.query.filter(User.mobile == mobile).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据查询错误")
+    # 判断用户是否存在
+    if not user:
+        return jsonify(errno=RET.NODATA, errmsg="用户不存在")
+    # 校验登录的密码与当前用户的密码是否一致
+    if not user.check_passowrd(password):
+        return jsonify(errno=RET.PWDERR, errmsg="用户名或密码错误")
+
+    # 4、保存用户的登录状态
+    session["user_id"] = user.id
+    session["mobile"] = user.mobile
+    session["nick_name"] = user.nick_name
+
+    # 设置当前用户最后一次登录的时间
+    user.last_login = datetime.now()
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+
+    # 5、返回响应
+    return jsonify(errno=RET.OK, errmsg="登录成功")
+
+
+@passport_blu.route("/logout")
+def logout():
+    """
+    用户登出逻辑
+    :return:
+    """
+    # pop是移除session中的数据（dict）
+    # pop会有一个返回值，如果要移除的key不存在，就返回None
+    session.pop("user_id", None)
+    session.pop("mobile", None)
+    session.pop("nick_name", None)
+
+    return jsonify(errno=RET.OK, errmsg="退出成功")

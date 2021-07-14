@@ -119,6 +119,31 @@ $(function(){
         }
 
         // 发起登录请求
+        var params = {
+            "mobile": mobile,
+            "password": password
+        }
+
+        $.ajax({
+            url: "/passport/login",
+            type: "post",
+            contentType: "application/json",
+            // 在heeder中添加csrf_token的随机值
+            headers:{
+                "X-CSRFToken": getCookie('csrf_token')
+            },
+            data: JSON.stringify(params),
+            success:function (resp) {
+                if (resp.errno == "0"){
+                    // 代表登录成功
+                    location.reload()
+                }else {
+                    alert(resp.errmsg)
+                    $("#login-password-err").html(resp.errmsg)
+                    $("#login-password-err").show()
+                }
+            }
+        })
     })
 
 
@@ -257,6 +282,14 @@ function sendSMSCode() {
                 $(".get_code").attr("onclick", "sendSMSCode();");
             }
         }
+    })
+}
+
+function logout() {
+    $.get('/passport/logout', function (resp) {
+        // if (response.errno == "0"){
+           location.reload()
+        // }
     })
 }
 

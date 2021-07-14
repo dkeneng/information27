@@ -1,11 +1,17 @@
-from flask import render_template, current_app
+from flask import render_template, current_app, session
 
 from . import index_blu
 from info import redis_store
+from ...models import User
 
 
 @index_blu.route("/")
 def index():
+    """
+    显示首页
+    1、如果用户已经登录，将当前登录用户的数据传到模板中，供模板显示
+    :return:
+    """
     # # 将session缓存到redis中
     # session["name"] = "cehsi"
     # session["password"] = "qwerdfhkhkhkjsd"
@@ -21,7 +27,22 @@ def index():
     # redis_store.set("name1", "aaaaaa")
     # redis_store.set("name2", "zzzzzz")
     # redis_store.set("name4", "cccccc")
-    return render_template('news/index.html')
+
+    # 取到用户id
+    user_id = session.get("user_id", None)
+    user = None
+    if user_id:
+        # 查询用户的模型
+        try:
+            user = User.query.get(user_id)
+        except Exception as e:
+            current_app.logger.error(e)
+
+    data = {
+        "user": user.to_dict() if user else None
+    }
+    # print(data)
+    return render_template('news/index.html', data=data)
     # return "index"
 
 
