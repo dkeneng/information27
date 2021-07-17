@@ -10,10 +10,7 @@ from flask_wtf import CSRFProtect
 
 from config import config
 
-
 # 初始化数据库
-from info.utils.common import do_index_class
-
 db = SQLAlchemy()
 
 # 定义 redis 存储对象
@@ -53,6 +50,7 @@ def create_app(config_name):
     CSRFProtect(app)
     # 设置session保存指定位置
     Session(app)
+    from info.utils.common import do_index_class
     # 添加自定义过滤器
     app.add_template_filter(do_index_class, "index_class")
 
@@ -72,5 +70,8 @@ def create_app(config_name):
 
     from info.modules.passport import passport_blu
     app.register_blueprint(passport_blu)
+
+    from info.modules.news import news_blu
+    app.register_blueprint(news_blu)
 
     return app
