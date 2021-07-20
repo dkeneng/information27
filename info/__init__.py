@@ -47,7 +47,7 @@ def create_app(config_name):
     # 开启当前项目CSRF保护，只做服务器验证功能
     # 帮我们做了：从cookie中取出随机值，从表单中取出随机值，然后进行校验，并且响应校验结果
     # 我们需要做：1、在返回响应的时候，往cookie中添加一个csrf_token， 2、在表单中添加一个隐藏的csrf_token
-    CSRFProtect(app)
+    # CSRFProtect(app)
     # 设置session保存指定位置
     Session(app)
     from info.utils.common import do_index_class
