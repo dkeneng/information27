@@ -272,22 +272,3 @@ def comment_like():
         return jsonify(errno=RET.DBERR, errmsg="数据库操作失败")
 
     return jsonify(errno=RET.OK, errmsg="OK")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
