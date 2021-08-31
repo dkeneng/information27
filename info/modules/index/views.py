@@ -78,7 +78,7 @@ def favicon():
     # print(__name__)
     # 查看当前应用的根路径
     # print(current_app.root_path)
-    return current_app.send_static_file('news/favicon.ico')
+    return current_app.send_static_file('favicon.ico')
 
 
 @index_blu.route('/news_list')
